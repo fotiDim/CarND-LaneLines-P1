@@ -1,56 +1,81 @@
 # **Finding Lane Lines on the Road** 
-[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
 
-<img src="examples/laneLines_thirdPass.jpg" width="480" alt="Combined Image" />
+## Writeup
 
-Overview
+This is a simplistic approach in detecting road lane lines. My personal goal was to familiarize myelf with the technologies and craft up a solution that:
+1. is easy to read and understand
+2. maintains good code quality
+3. performs well
 ---
 
-When we drive, we use our eyes to decide where to go.  The lines on the road that show us where the lanes are act as our constant reference for where to steer the vehicle.  Naturally, one of the first things we would like to do in developing a self-driving car is to automatically detect lane lines using an algorithm.
+**Finding Lane Lines on the Road**
 
-In this project you will detect lane lines in images using Python and OpenCV.  OpenCV means "Open-Source Computer Vision", which is a package that has many useful tools for analyzing images.  
-
-To complete the project, two files will be submitted: a file containing project code and a file containing a brief write up explaining your solution. We have included template files to be used both for the [code](https://github.com/udacity/CarND-LaneLines-P1/blob/master/P1.ipynb) and the [writeup](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md).The code file is called P1.ipynb and the writeup template is writeup_template.md 
-
-To meet specifications in the project, take a look at the requirements in the [project rubric](https://review.udacity.com/#!/rubrics/322/view)
+The goals / steps of this project are the following:
+* Make a pipeline that finds lane lines on the road
+* Reflect on your work in a written report
 
 
-Creating a Great Writeup
----
-For this project, a great writeup should provide a detailed response to the "Reflection" section of the [project rubric](https://review.udacity.com/#!/rubrics/322/view). There are three parts to the reflection:
+[//]: # (Image References)
 
-1. Describe the pipeline
-
-2. Identify any shortcomings
-
-3. Suggest possible improvements
-
-We encourage using images in your writeup to demonstrate how your pipeline works.  
-
-All that said, please be concise!  We're not looking for you to write a book here: just a brief description.
-
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup. Here is a link to a [writeup template file](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md). 
+[grayscale]: ./examples/grayscale.png "Grayscale"
+[blurred_image]: ./examples/blurred.png "Blurred image"
+[canny_edges]: ./examples/canny_edges.png "Canny edges"
+[masked_region]: ./examples/masked_region.png "Masked region"
+[hugh_lines]: ./examples/hugh_lines_extrapolated.png "Hugh lines"
+[overlayed]: ./examples/final.png "Final"
 
 
-The Project
 ---
 
-## If you have already installed the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) you should be good to go!   If not, you should install the starter kit to get started on this project. ##
+### Reflection
 
-**Step 1:** Set up the [CarND Term1 Starter Kit](https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/83ec35ee-1e02-48a5-bdb7-d244bd47c2dc/lessons/8c82408b-a217-4d09-b81d-1bda4c6380ef/concepts/4f1870e0-3849-43e4-b670-12e6f2d4b7a7) if you haven't already.
+### 1. Description of the pipeline
 
-**Step 2:** Open the code in a Jupyter Notebook
+The jupyter file is unchanched except for the `draw_lines()` and the `process_image()` functions. This makes it easier for people familiar with the problem to follow this solution. I made use of all the helper functions.
 
-You will complete the project code in a Jupyter notebook.  If you are unfamiliar with Jupyter Notebooks, check out [Udacity's free course on Anaconda and Jupyter Notebooks](https://classroom.udacity.com/courses/ud1111) to get started.
+My pipeline consists of 5 steps:
 
-Jupyter is an Ipython notebook where you can run blocks of code and see results interactively.  All the code for this project is contained in a Jupyter notebook. To start Jupyter in your browser, use terminal to navigate to your project directory and then run the following command at the terminal prompt (be sure you've activated your Python 3 carnd-term1 environment as described in the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) installation instructions!):
+# Convert to grayscale
+![alt text][grayscale]
 
-`> jupyter notebook`
+The is a simple grayscale conversion.
 
-A browser window will appear showing the contents of the current directory.  Click on the file called "P1.ipynb".  Another browser window will appear displaying the notebook.  Follow the instructions in the notebook to complete the project.  
+# Blur
+![alt text][blurred_image]
 
-**Step 3:** Complete the project and submit both the Ipython notebook and the project writeup
+We blur the image before the next step in order to soften our sharp edges.
 
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+# Perform Canny edge detection
+![alt text][canny_edges]
 
+This will detect the edges in the image. Our goal is to detect only lane lines and not any other edges. 
+
+# Define a region of interest
+![alt text][masked_region]
+
+We define our region of interest as a polygon with 4 vertices. It has the shape of a 2D frustum being wide in the bottom and narrow in the top. It basically follows the lanes shape.
+It nomrally extends from the bottom of the screen up to where the lanes would meet. We call this spot the `horizon`. In our case we also crop a bit in the bottom to compensate for the car hood that is visible in the challenge video.
+
+# Find Hough lines
+![alt text][hugh_lines]
+
+We detect line segments out of the edges detected in the previous steps. This step also calls `draw_lines()` which unifies all line segments into a single line for each road lane. 
+
+In order to draw a single line on the left and right lanes, `draw_lines()` was modified to best fit a straight line to the end points of the line segments that were detected out of each lane. For that `polyfit` was used which returns us the coefficients of `y = mx + b`. In addition `poly1d()` is used to easily calculate y values out of x. Using that we extrapolate the lines from the bottom of the screen up to the horizon which is roughly at the vertical center of the image.
+
+The final result looks like that:
+
+![alt text][overlayed]
+
+### 2. Identify potential shortcomings with your current pipeline
+
+One potential shortcoming would be what would happen when the is horizontal edge detected coming from a shadow, tree branch etc. It would also be interesting to see how the pipeline performs at night or with direct sunlight.
+
+
+### 3. Suggest possible improvements to your pipeline
+
+Possible improvements would be:
+- Use `polyfit()` to calculate x out of y for the lane lines (instead of y out of x). This will help us with extrapolation as we will only need to the "horizon" y-level to caclulate the x value of each extrapolated line.
+- For parameter tuning it would be helpful to extract all video frames with overlays after we run our pipeline. This way it would be easy to find out which frames are the problematic ones and run our pipeline on those frames individually in order to tune our parameters.
+- On cases such as shadows on the road it can be than lane lines can be detected on those shadows. Sometime this shadows are almost vertical. We can see such a case in the last challenge video. We could ingore edges that are have an almost vertical slope. This will also help ignoring items that have fallen on the street, such as tree branches or trash.
+- We could do automatic car hood detection as part of our pipeline to ignore that part of the image automatically if the car hood is visible.
