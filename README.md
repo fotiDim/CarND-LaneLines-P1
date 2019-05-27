@@ -6,6 +6,8 @@ This is a simplistic approach in detecting road lane lines. My personal goal was
 1. is easy to read and understand
 2. maintains good code quality
 3. performs well
+
+In this repo you will also find frame-by-frame exports of the test videos, exported to disk using `clip.to_images_sequence("images%03d.jpeg")`. Usefull if you need to debug specific frames.
 ---
 
 **Finding Lane Lines on the Road**
