@@ -76,6 +76,6 @@ One potential shortcoming would be what would happen when the is horizontal edge
 
 Possible improvements would be:
 - Use `polyfit()` to calculate x out of y for the lane lines (instead of y out of x). This will help us with extrapolation as we will only need to the "horizon" y-level to caclulate the x value of each extrapolated line.
-- For parameter tuning it would be helpful to extract all video frames with overlays after we run our pipeline. This way it would be easy to find out which frames are the problematic ones and run our pipeline on those frames individually in order to tune our parameters.
+- For parameter tuning it would be helpful to extract all video frames with detected lane and frame index overlays. This way it would be easy to find out which frames are the problematic ones and run our pipeline on those frames individually in order to tune our parameters.
 - On cases such as shadows on the road it can be than lane lines can be detected on those shadows. Sometime this shadows are almost vertical. We can see such a case in the last challenge video. We could ingore edges that are have an almost vertical slope. This will also help ignoring items that have fallen on the street, such as tree branches or trash.
 - We could do automatic car hood detection as part of our pipeline to ignore that part of the image automatically if the car hood is visible.
